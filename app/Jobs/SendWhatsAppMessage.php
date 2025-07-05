@@ -37,9 +37,9 @@ class SendWhatsAppMessage implements ShouldQueue
                 // Check if WhatsApp is connected before sending
                 if (!$whatsappService->isConnected()) {
                     Log::warning('WhatsApp not connected, skipping message', [
-                        'number' => $this->number,
+                    'number' => $this->number,
                         'file_url' => $fileUrl
-                    ]);
+                ]);
                     $message->status = 'failed';
                     $message->save();
                     continue;
@@ -75,7 +75,7 @@ class SendWhatsAppMessage implements ShouldQueue
                     Log::error('Max retry attempts reached for WhatsApp message', [
                         'number' => $this->number,
                         'file_url' => $fileUrl
-                    ]);
+                ]);
                 } else {
                     // Retry this job
                     $this->release(30); // Wait 30 seconds before retry

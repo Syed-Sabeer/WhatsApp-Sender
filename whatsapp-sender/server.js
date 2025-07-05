@@ -318,6 +318,14 @@ const HOST = process.env.HOST || '0.0.0.0';
 app.listen(PORT, HOST, () => {
     console.log(`🚀 WhatsApp server running on http://${HOST}:${PORT}`);
     console.log(`🌐 Server accessible at: ${process.env.APP_URL || 'http://localhost'}:${PORT}`);
+    console.log(`📊 Environment variables:`);
+    console.log(`   - PORT: ${process.env.PORT}`);
+    console.log(`   - NODE_PORT: ${process.env.NODE_PORT}`);
+    console.log(`   - HOST: ${process.env.HOST}`);
+    console.log(`   - APP_URL: ${process.env.APP_URL}`);
+    console.log(`   - NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`🔗 Health check available at: http://${HOST}:${PORT}/health`);
+    console.log(`📱 Status endpoint: http://${HOST}:${PORT}/status`);
     whatsappManager.initializeClient();
 });
 
