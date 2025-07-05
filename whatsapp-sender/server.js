@@ -7,18 +7,8 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-
-// Enhanced CORS for cPanel
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
-
+app.use(cors());
 app.use(express.json());
-
-// Trust proxy for cPanel
-app.set('trust proxy', true);
 
 // Global state management
 class WhatsAppManager {
@@ -58,32 +48,11 @@ class WhatsAppManager {
         this.log('🚀 Initializing WhatsApp client...');
 
         try {
-            // Memory-optimized Puppeteer configuration for cPanel
             this.client = new Client({
-                authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth(),
                 puppeteer: { 
                     headless: true,
-                    args: [
-                        '--no-sandbox',
-                        '--disable-setuid-sandbox',
-                        '--disable-dev-shm-usage',
-                        '--disable-accelerated-2d-canvas',
-                        '--no-first-run',
-                        '--no-zygote',
-                        '--disable-gpu',
-                        '--disable-background-timer-throttling',
-                        '--disable-backgrounding-occluded-windows',
-                        '--disable-renderer-backgrounding',
-                        '--disable-features=TranslateUI',
-                        '--disable-ipc-flooding-protection',
-                        '--memory-pressure-off',
-                        '--max_old_space_size=512',
-                        '--max-old-space-size=512'
-                    ],
-                    defaultViewport: {
-                        width: 800,
-                        height: 600
-                    }
+                    args: ['--no-sandbox', '--disable-setuid-sandbox']
                 }
             });
 
@@ -342,33 +311,11 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Add a simple test route
-app.get('/', (req, res) => {
-    res.json({
-        message: 'WhatsApp Sender Server is running!',
-        timestamp: new Date().toISOString(),
-        port: PORT,
-        host: HOST,
-        env: process.env.NODE_ENV || 'development'
-    });
-});
-
 // Start server and initialize WhatsApp client
-const PORT = process.env.PORT || process.env.NODE_PORT || 3000;
-const HOST = process.env.HOST || '0.0.0.0';
+const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, HOST, () => {
-    console.log(`🚀 WhatsApp server running on http://${HOST}:${PORT}`);
-    console.log(`🌐 Server accessible at: ${process.env.APP_URL || 'http://localhost'}:${PORT}`);
-    console.log(`📊 Environment variables:`);
-    console.log(`   - PORT: ${process.env.PORT}`);
-    console.log(`   - NODE_PORT: ${process.env.NODE_PORT}`);
-    console.log(`   - HOST: ${process.env.HOST}`);
-    console.log(`   - APP_URL: ${process.env.APP_URL}`);
-    console.log(`   - NODE_ENV: ${process.env.NODE_ENV}`);
-    console.log(`🔗 Health check available at: http://${HOST}:${PORT}/health`);
-    console.log(`📱 Status endpoint: http://${HOST}:${PORT}/status`);
-    console.log(`🏠 Root endpoint: http://${HOST}:${PORT}/`);
+app.listen(PORT, () => {
+    console.log(`🚀 WhatsApp server running on http://localhost:${PORT}`);
     whatsappManager.initializeClient();
 });
 

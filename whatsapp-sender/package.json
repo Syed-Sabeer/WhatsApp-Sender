@@ -5,13 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "start:lightweight": "node server-lightweight.js",
     "dev": "nodemon server.js",
-    "cpanel": "node server.js",
-    "pm2:start": "pm2 start ecosystem.config.js",
-    "pm2:stop": "pm2 stop whatsapp-sender",
-    "pm2:restart": "pm2 restart whatsapp-sender",
-    "pm2:logs": "pm2 logs whatsapp-sender",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -27,8 +21,7 @@
     "express": "^4.18.2",
     "qrcode": "^1.5.3",
     "axios": "^1.6.0",
-    "cors": "^2.8.5",
-    "pm2": "^5.3.0"
+    "cors": "^2.8.5"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
