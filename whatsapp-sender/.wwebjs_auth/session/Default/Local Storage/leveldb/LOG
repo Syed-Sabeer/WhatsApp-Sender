@@ -1,2 +1,7 @@
+<<<<<<< HEAD
 2025/07/05-18:48:55.217 ba4 Creating DB C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Local Storage\leveldb since it was missing.
 2025/07/05-18:48:55.287 ba4 Reusing MANIFEST C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
+=======
+2025/07/05-13:14:49.274 68e4 Creating DB C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Local Storage\leveldb since it was missing.
+2025/07/05-13:14:49.371 68e4 Reusing MANIFEST C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
+>>>>>>> ddca6c307cc09fe92290a7b7c5c2118642d19596
