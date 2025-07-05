@@ -312,10 +312,12 @@ app.get('/health', (req, res) => {
 });
 
 // Start server and initialize WhatsApp client
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || process.env.NODE_PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
-app.listen(PORT, () => {
-    console.log(`🚀 WhatsApp server running on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+    console.log(`🚀 WhatsApp server running on http://${HOST}:${PORT}`);
+    console.log(`🌐 Server accessible at: ${process.env.APP_URL || 'http://localhost'}:${PORT}`);
     whatsappManager.initializeClient();
 });
 
