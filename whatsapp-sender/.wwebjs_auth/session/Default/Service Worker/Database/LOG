@@ -1,3 +1,2 @@
-2025/07/05-00:02:40.237 5b34 Reusing MANIFEST C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Service Worker\Database/MANIFEST-000001
-2025/07/05-00:02:40.238 5b34 Recovering log #3
-2025/07/05-00:02:40.240 5b34 Reusing old log C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Service Worker\Database/000003.log 
+2025/07/05-13:14:54.452 68e4 Creating DB C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Service Worker\Database since it was missing.
+2025/07/05-13:14:54.469 68e4 Reusing MANIFEST C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Service Worker\Database/MANIFEST-000001

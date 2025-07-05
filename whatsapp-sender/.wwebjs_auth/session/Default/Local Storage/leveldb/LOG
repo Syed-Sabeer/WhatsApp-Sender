@@ -1,6 +1,2 @@
-2025/07/05-00:02:40.224 5b34 Reusing MANIFEST C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
-2025/07/05-00:02:40.225 5b34 Recovering log #4
-2025/07/05-00:02:40.227 5b34 Reusing old log C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Local Storage\leveldb/000004.log 
-2025/07/05-00:13:41.020 51bc Level-0 table #8: started
-2025/07/05-00:13:41.026 51bc Level-0 table #8: 14514 bytes OK
-2025/07/05-00:13:41.029 51bc Delete type=0 #4
+2025/07/05-13:14:49.274 68e4 Creating DB C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Local Storage\leveldb since it was missing.
+2025/07/05-13:14:49.371 68e4 Reusing MANIFEST C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
