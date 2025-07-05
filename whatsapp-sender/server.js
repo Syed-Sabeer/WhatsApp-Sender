@@ -1,4 +1,4 @@
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const { default: makeWASocket, DisconnectReason, useMultiFileAuthState, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
 const express = require('express');
 const qrcode = require('qrcode'); 
 const axios = require('axios');
@@ -13,7 +13,7 @@ app.use(express.json());
 // Global state management
 class WhatsAppManager {
     constructor() {
-        this.client = null;
+        this.sock = null;
         this.isConnected = false;
         this.isInitializing = false;
         this.qrCodeData = null;
@@ -28,6 +28,7 @@ class WhatsAppManager {
         this.totalFiles = 0;
         this.sentFiles = 0;
         this.failedFiles = 0;
+        this.authFolder = './auth_info_baileys';
     }
 
     log(message) {
@@ -45,19 +46,30 @@ class WhatsAppManager {
         }
 
         this.isInitializing = true;
-        this.log('🚀 Initializing WhatsApp client...');
+        this.log('🚀 Initializing WhatsApp client with Baileys...');
 
         try {
-            this.client = new Client({
-    authStrategy: new LocalAuth(),
-                puppeteer: { 
-                    headless: true,
-                    args: ['--no-sandbox', '--disable-setuid-sandbox']
-                }
+            // Create auth folder if it doesn't exist
+            if (!fs.existsSync(this.authFolder)) {
+                fs.mkdirSync(this.authFolder, { recursive: true });
+            }
+
+            // Get auth state
+            const { state, saveCreds } = await useMultiFileAuthState(this.authFolder);
+            
+            // Fetch latest version
+            const { version, isLatest } = await fetchLatestBaileysVersion();
+            this.log(`📱 Using Baileys version: ${version.join('.')}`);
+
+            // Create socket
+            this.sock = makeWASocket({
+                version,
+                auth: state,
+                browser: ['WhatsApp File Sender', 'Chrome', '1.0.0']
             });
 
-            this.setupEventHandlers();
-            await this.client.initialize();
+            this.setupEventHandlers(saveCreds);
+            this.log('✅ Baileys client initialized successfully');
         } catch (error) {
             this.log(`❌ Failed to initialize client: ${error.message}`);
             this.isInitializing = false;
@@ -65,45 +77,56 @@ class WhatsAppManager {
         }
     }
 
-    setupEventHandlers() {
-        this.client.on('qr', async (qr) => {
-            this.log('📱 QR Code generated - scan to connect');
-            try {
-                this.qrCodeData = await qrcode.toDataURL(qr);
-                this.isConnected = false;
-            } catch (error) {
-                this.log(`❌ Error generating QR code: ${error.message}`);
+    setupEventHandlers(saveCreds) {
+        this.sock.ev.on('connection.update', async (update) => {
+            const { connection, lastDisconnect, qr } = update;
+
+            if (qr) {
+                this.log('📱 QR Code generated - scan to connect');
+                try {
+                    this.qrCodeData = await qrcode.toDataURL(qr);
+                    this.isConnected = false;
+                    // Also log QR code to terminal for easy scanning
+                    console.log('\n📱 Scan this QR code with WhatsApp Web:');
+                    console.log(qr);
+                } catch (error) {
+                    this.log(`❌ Error generating QR code: ${error.message}`);
+                }
+            }
+
+            if (connection === 'close') {
+                const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+                this.log(`🔌 Connection closed due to ${lastDisconnect?.error?.message || 'unknown reason'}, reconnecting ${shouldReconnect}`);
+                
+                if (shouldReconnect) {
+                    this.isConnected = false;
+                    this.isInitializing = false;
+                    this.handleDisconnection();
+                } else {
+                    this.log('❌ Connection closed permanently');
+                    this.isConnected = false;
+                    this.isInitializing = false;
+                }
+            } else if (connection === 'open') {
+                this.log('✅ WhatsApp client is ready and connected!');
+                this.isConnected = true;
+                this.isInitializing = false;
+                this.qrCodeData = null;
+                this.reconnectAttempts = 0;
+                this.processQueue();
             }
         });
 
-        this.client.on('ready', () => {
-            this.log('✅ WhatsApp client is ready and connected!');
-            this.isConnected = true;
-            this.isInitializing = false;
-            this.qrCodeData = null;
-            this.reconnectAttempts = 0;
-            this.processQueue();
-        });
+        this.sock.ev.on('creds.update', saveCreds);
 
-        this.client.on('authenticated', () => {
-            this.log('🔐 WhatsApp authentication successful');
-        });
-
-        this.client.on('auth_failure', (msg) => {
-            this.log(`❌ Authentication failed: ${msg}`);
-            this.isConnected = false;
-            this.isInitializing = false;
-        });
-
-        this.client.on('disconnected', (reason) => {
-            this.log(`🔌 WhatsApp disconnected: ${reason}`);
-            this.isConnected = false;
-            this.isInitializing = false;
-            this.handleDisconnection();
-        });
-
-        this.client.on('loading_screen', (percent, message) => {
-            this.log(`📱 Loading: ${percent}% - ${message}`);
+        this.sock.ev.on('messages.upsert', async (m) => {
+            if (m.type === 'notify') {
+                for (const msg of m.messages) {
+                    if (!msg.key.fromMe && msg.message) {
+                        this.log(`📨 Received message from ${msg.key.remoteJid}: ${msg.message.conversation || 'Media message'}`);
+                    }
+                }
+            }
         });
     }
 
@@ -120,8 +143,14 @@ class WhatsAppManager {
     }
 
     async sendFile(number, fileUrl) {
-        if (!this.isConnected) {
+        if (!this.isConnected || !this.sock) {
             throw new Error('WhatsApp client is not connected');
+        }
+
+        // Validate number format
+        const cleanNumber = String(number).replace(/\D/g, '');
+        if (cleanNumber.length < 10) {
+            throw new Error('Invalid phone number format');
         }
 
         try {
@@ -132,18 +161,61 @@ class WhatsAppManager {
             });
             
             const mime = response.headers['content-type'];
-            const base64 = Buffer.from(response.data).toString('base64');
-            const media = new MessageMedia(mime, base64, 'file');
-
-            const chatId = `${number}@c.us`;
-            this.log(`📨 Sending file to: ${chatId}`);
+            const buffer = Buffer.from(response.data);
             
-            await this.client.sendMessage(chatId, media);
-            this.log(`✅ File sent successfully to ${number}`);
+            // Determine file type and extension
+            let fileType = 'document';
+            let fileName = 'file';
+            
+            if (mime.startsWith('image/')) {
+                fileType = 'image';
+                fileName = 'image.jpg';
+            } else if (mime.startsWith('video/')) {
+                fileType = 'video';
+                fileName = 'video.mp4';
+            } else if (mime.startsWith('audio/')) {
+                fileType = 'audio';
+                fileName = 'audio.mp3';
+            } else if (mime.includes('pdf')) {
+                fileName = 'document.pdf';
+            } else if (mime.includes('word') || mime.includes('document')) {
+                fileName = 'document.docx';
+            } else if (mime.includes('excel') || mime.includes('spreadsheet')) {
+                fileName = 'document.xlsx';
+            }
+
+            const chatId = `${cleanNumber}@s.whatsapp.net`;
+            this.log(`📨 Sending ${fileType} to: ${chatId}`);
+            
+            // Send file based on type
+            if (fileType === 'image') {
+                await this.sock.sendMessage(chatId, {
+                    image: buffer,
+                    caption: 'File sent via WhatsApp File Sender'
+                });
+            } else if (fileType === 'video') {
+                await this.sock.sendMessage(chatId, {
+                    video: buffer,
+                    caption: 'File sent via WhatsApp File Sender'
+                });
+            } else if (fileType === 'audio') {
+                await this.sock.sendMessage(chatId, {
+                    audio: buffer,
+                    mimetype: mime
+                });
+            } else {
+                await this.sock.sendMessage(chatId, {
+                    document: buffer,
+                    mimetype: mime,
+                    fileName: fileName
+                });
+            }
+            
+            this.log(`✅ File sent successfully to ${cleanNumber}`);
             
             return { success: true, message: 'File sent successfully' };
         } catch (error) {
-            this.log(`❌ Failed to send file to ${number}: ${error.message}`);
+            this.log(`❌ Failed to send file to ${cleanNumber}: ${error.message}`);
             throw error;
         }
     }
@@ -199,24 +271,22 @@ class WhatsAppManager {
         this.currentTask = null;
         
         if (this.forceQuitRequested) {
-            this.log('🛑 Task processing stopped by force quit');
+            this.log('🛑 Queue processing stopped due to force quit');
         } else {
-            this.log('✅ All tasks completed');
+            this.log('✅ Queue processing completed');
         }
     }
 
     forceQuit() {
+        this.log('🛑 Force quit requested');
         this.forceQuitRequested = true;
         this.taskQueue = [];
-        this.log('🛑 Force quit requested - stopping all tasks');
+        if (this.sock) {
+            this.sock.end();
+        }
     }
 
     getStatus() {
-        const totalFiles = this.processedFiles.length + this.taskQueue.length + (this.currentTask ? 1 : 0);
-        const sentFiles = this.processedFiles.filter(f => f.status === 'sent').length;
-        const failedFiles = this.processedFiles.filter(f => f.status === 'failed').length;
-        const progress = totalFiles > 0 ? Math.round((sentFiles + failedFiles) / totalFiles * 100) : 0;
-        
         return {
             connected: this.isConnected,
             initializing: this.isInitializing,
@@ -226,104 +296,104 @@ class WhatsAppManager {
             currentTask: this.currentTask,
             queueLength: this.taskQueue.length,
             reconnectAttempts: this.reconnectAttempts,
-            totalFiles,
-            sentFiles,
-            failedFiles,
-            progress
+            totalFiles: this.totalFiles,
+            sentFiles: this.sentFiles,
+            failedFiles: this.failedFiles
+        };
+    }
+
+    getTaskStatus() {
+        return {
+            taskRunning: this.isTaskRunning,
+            currentTask: this.currentTask,
+            queueLength: this.taskQueue.length,
+            totalFiles: this.totalFiles,
+            sentFiles: this.sentFiles,
+            failedFiles: this.failedFiles,
+            progress: this.totalFiles > 0 ? Math.round((this.sentFiles + this.failedFiles) / this.totalFiles * 100) : 0,
+            logs: this.logs.slice(0, 10)
         };
     }
 }
 
-// Initialize WhatsApp manager
-const whatsappManager = new WhatsAppManager();
+const manager = new WhatsAppManager();
+
+// Initialize client on startup
+manager.initializeClient();
 
 // API Routes
-app.post('/send', async (req, res) => {
-    const { number, file_url } = req.body;
+app.get('/status', (req, res) => {
+    res.json(manager.getStatus());
+});
 
-    if (!number || !file_url) {
-        return res.status(400).json({ 
-            error: 'number and file_url are required' 
+app.post('/send', async (req, res) => {
+    try {
+        const { number, file_url } = req.body;
+        
+        // Validate input parameters
+        if (!number || !file_url) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Number and file_url are required' 
+            });
+        }
+
+        // Ensure number is a string and clean it
+        const cleanNumber = String(number).replace(/\D/g, '');
+        
+        if (cleanNumber.length < 10) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid phone number format' 
+            });
+        }
+
+        const task = {
+            number: cleanNumber,
+            fileUrl: file_url,
+            description: `Send file to ${cleanNumber}`,
+            onSuccess: (result) => {
+                manager.log(`✅ Task completed successfully: ${result.message}`);
+            },
+            onError: (error) => {
+                manager.log(`❌ Task failed: ${error.message}`);
+            }
+        };
+
+        manager.addTask(task);
+        
+        res.json({ 
+            success: true, 
+            message: 'File queued for sending',
+            queueLength: manager.taskQueue.length
+        });
+    } catch (error) {
+        manager.log(`❌ Send request error: ${error.message}`);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message 
         });
     }
-
-    const task = {
-        number,
-        fileUrl: file_url,
-        description: `Send file to ${number}`,
-        onSuccess: (result) => {
-            // Task completed successfully
-        },
-        onError: (error) => {
-            // Task failed
-        }
-    };
-
-    whatsappManager.addTask(task);
-
-    res.json({ 
-        success: true, 
-        message: 'Task added to queue',
-        taskId: Date.now()
-    });
-});
-
-app.get('/status', (req, res) => {
-    res.json(whatsappManager.getStatus());
-});
-
-app.get('/task-status', (req, res) => {
-    const status = whatsappManager.getStatus();
-    res.json({
-        taskRunning: status.taskRunning,
-        queueLength: status.queueLength,
-        currentTask: status.currentTask,
-        totalFiles: status.totalFiles,
-        sentFiles: status.sentFiles,
-        failedFiles: status.failedFiles,
-        progress: status.progress,
-        logs: status.logs.slice(-10)
-    });
 });
 
 app.post('/force-quit', (req, res) => {
-    whatsappManager.forceQuit();
-    res.json({ 
-        success: true, 
-        message: 'Force quit requested' 
-    });
+    manager.forceQuit();
+    res.json({ success: true, message: 'Force quit requested' });
 });
 
-app.post('/reconnect', async (req, res) => {
-    whatsappManager.reconnectAttempts = 0;
-    await whatsappManager.initializeClient();
-    res.json({ 
-        success: true, 
-        message: 'Reconnection initiated' 
-    });
+app.post('/reconnect', (req, res) => {
+    manager.initializeClient();
+    res.json({ success: true, message: 'Reconnection initiated' });
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok', 
-        timestamp: new Date().toISOString() 
-    });
+app.get('/task-status', (req, res) => {
+    res.json(manager.getTaskStatus());
 });
 
-// Start server and initialize WhatsApp client
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-    console.log(`🚀 WhatsApp server running on http://localhost:${PORT}`);
-    whatsappManager.initializeClient();
-});
-
-// Graceful shutdown
-process.on('SIGINT', async () => {
-    console.log('\n🛑 Shutting down gracefully...');
-    if (whatsappManager.client) {
-        await whatsappManager.client.destroy();
-    }
-    process.exit(0);
+    console.log(`🚀 WhatsApp File Sender server running on port ${PORT}`);
+    console.log(`📱 Using Baileys for WhatsApp Web API`);
+    console.log(`🌐 Server URL: http://localhost:${PORT}`);
+    console.log(`📋 Status: http://localhost:${PORT}/status`);
 });

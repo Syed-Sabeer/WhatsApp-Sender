@@ -31,7 +31,7 @@ class WhatsAppService
                 return $data;
             }
 
-            return $this->getDefaultStatus('Unable to reach Node server');
+            return $this->getDefaultStatus('Unable to reach Baileys server');
         } catch (\Exception $e) {
             Log::error('WhatsApp status check failed', ['error' => $e->getMessage()]);
             return $this->getDefaultStatus('Connection error: ' . $e->getMessage());
@@ -64,7 +64,7 @@ class WhatsAppService
                 'status' => $response->status()
             ]);
 
-            return ['success' => false, 'message' => 'Failed to send file'];
+            return ['success' => false, 'message' => 'Failed to send file via Baileys'];
         } catch (\Exception $e) {
             Log::error('WhatsApp send exception', [
                 'number' => $number,
@@ -72,7 +72,7 @@ class WhatsAppService
                 'error' => $e->getMessage()
             ]);
 
-            return ['success' => false, 'message' => 'Connection error'];
+            return ['success' => false, 'message' => 'Baileys connection error'];
         }
     }
 
