@@ -7,8 +7,18 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
+
+// Enhanced CORS for cPanel
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
 app.use(express.json());
+
+// Trust proxy for cPanel
+app.set('trust proxy', true);
 
 // Global state management
 class WhatsAppManager {
@@ -311,6 +321,17 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Add a simple test route
+app.get('/', (req, res) => {
+    res.json({
+        message: 'WhatsApp Sender Server is running!',
+        timestamp: new Date().toISOString(),
+        port: PORT,
+        host: HOST,
+        env: process.env.NODE_ENV || 'development'
+    });
+});
+
 // Start server and initialize WhatsApp client
 const PORT = process.env.PORT || process.env.NODE_PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -326,6 +347,7 @@ app.listen(PORT, HOST, () => {
     console.log(`   - NODE_ENV: ${process.env.NODE_ENV}`);
     console.log(`🔗 Health check available at: http://${HOST}:${PORT}/health`);
     console.log(`📱 Status endpoint: http://${HOST}:${PORT}/status`);
+    console.log(`🏠 Root endpoint: http://${HOST}:${PORT}/`);
     whatsappManager.initializeClient();
 });
 
