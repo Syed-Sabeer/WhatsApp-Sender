@@ -1,7 +1,13 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 2025/07/05-18:48:56.787 47f4 Creating DB C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Session Storage since it was missing.
 2025/07/05-18:48:56.849 47f4 Reusing MANIFEST C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Session Storage/MANIFEST-000001
 =======
 2025/07/05-13:14:50.773 68e4 Creating DB C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Session Storage since it was missing.
 2025/07/05-13:14:50.791 68e4 Reusing MANIFEST C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Session Storage/MANIFEST-000001
 >>>>>>> ddca6c307cc09fe92290a7b7c5c2118642d19596
+=======
+2025/07/07-21:22:57.480 33c0 Reusing MANIFEST C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Session Storage/MANIFEST-000001
+2025/07/07-21:22:57.482 33c0 Recovering log #3
+2025/07/07-21:22:57.483 33c0 Reusing old log C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\Session Storage/000003.log 
+>>>>>>> 15a39ee60c3fbf3b8a64b97655f419039c6a843e

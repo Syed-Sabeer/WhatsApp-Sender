@@ -31,7 +31,7 @@ class SendWhatsAppMessage implements ShouldQueue
         $whatsappService = app(\App\Services\WhatsAppService::class);
         
         foreach ($this->messages as $message) {
-            $fileUrl = config('app.url') . '/storage/' . $message->file_path;
+            $fileUrl = config('app.asset_url') . '/storage/' . $message->file_path;
 
             try {
                 // Check if WhatsApp is connected before sending
@@ -45,7 +45,7 @@ class SendWhatsAppMessage implements ShouldQueue
                     continue;
                 }
 
-                $result = $whatsappService->sendFile($this->number, $fileUrl);
+                $result = $whatsappService->sendFile($this->number, $fileUrl, $message->original_filename);
 
                 if ($result['success']) {
                     $message->status = 'sent';

@@ -142,8 +142,8 @@ class WhatsAppManager {
         }
     }
 
-    async sendFile(number, fileUrl) {
-        if (!this.isConnected || !this.sock) {
+    async sendFile(number, fileUrl, originalFilename = null) {
+        if (!this.isConnected) {
             throw new Error('WhatsApp client is not connected');
         }
 
@@ -161,57 +161,19 @@ class WhatsAppManager {
             });
             
             const mime = response.headers['content-type'];
-            const buffer = Buffer.from(response.data);
+            const base64 = Buffer.from(response.data).toString('base64');
             
-            // Determine file type and extension
-            let fileType = 'document';
-            let fileName = 'file';
+            // Use provided original filename or extract from URL
+            const filename = originalFilename || fileUrl.split('/').pop();
             
-            if (mime.startsWith('image/')) {
-                fileType = 'image';
-                fileName = 'image.jpg';
-            } else if (mime.startsWith('video/')) {
-                fileType = 'video';
-                fileName = 'video.mp4';
-            } else if (mime.startsWith('audio/')) {
-                fileType = 'audio';
-                fileName = 'audio.mp3';
-            } else if (mime.includes('pdf')) {
-                fileName = 'document.pdf';
-            } else if (mime.includes('word') || mime.includes('document')) {
-                fileName = 'document.docx';
-            } else if (mime.includes('excel') || mime.includes('spreadsheet')) {
-                fileName = 'document.xlsx';
-            }
+            // Create media with original filename to preserve format
+            const media = new MessageMedia(mime, base64, filename);
 
-            const chatId = `${cleanNumber}@s.whatsapp.net`;
-            this.log(`📨 Sending ${fileType} to: ${chatId}`);
+            const chatId = `${number}@c.us`;
+            this.log(`📨 Sending file to: ${chatId} with filename: ${filename}`);
             
-            // Send file based on type
-            if (fileType === 'image') {
-                await this.sock.sendMessage(chatId, {
-                    image: buffer,
-                    caption: 'File sent via WhatsApp File Sender'
-                });
-            } else if (fileType === 'video') {
-                await this.sock.sendMessage(chatId, {
-                    video: buffer,
-                    caption: 'File sent via WhatsApp File Sender'
-                });
-            } else if (fileType === 'audio') {
-                await this.sock.sendMessage(chatId, {
-                    audio: buffer,
-                    mimetype: mime
-                });
-            } else {
-                await this.sock.sendMessage(chatId, {
-                    document: buffer,
-                    mimetype: mime,
-                    fileName: fileName
-                });
-            }
-            
-            this.log(`✅ File sent successfully to ${cleanNumber}`);
+            await this.client.sendMessage(chatId, media);
+            this.log(`✅ File sent successfully to ${number}`);
             
             return { success: true, message: 'File sent successfully' };
         } catch (error) {
@@ -244,7 +206,7 @@ class WhatsAppManager {
             this.log(`🔄 Processing task: ${task.description}`);
             
             try {
-                const result = await this.sendFile(task.number, task.fileUrl);
+                const result = await this.sendFile(task.number, task.fileUrl, task.originalFilename);
                 this.sentFiles++;
                 this.processedFiles.push({
                     number: task.number,
@@ -327,38 +289,26 @@ app.get('/status', (req, res) => {
 });
 
 app.post('/send', async (req, res) => {
-    try {
-        const { number, file_url } = req.body;
-        
-        // Validate input parameters
-        if (!number || !file_url) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Number and file_url are required' 
-            });
-        }
+    const { number, file_url, original_filename } = req.body;
 
-        // Ensure number is a string and clean it
-        const cleanNumber = String(number).replace(/\D/g, '');
-        
-        if (cleanNumber.length < 10) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Invalid phone number format' 
-            });
-        }
+    if (!number || !file_url) {
+        return res.status(400).json({ 
+            error: 'number and file_url are required' 
+        });
+    }
 
-        const task = {
-            number: cleanNumber,
-            fileUrl: file_url,
-            description: `Send file to ${cleanNumber}`,
-            onSuccess: (result) => {
-                manager.log(`✅ Task completed successfully: ${result.message}`);
-            },
-            onError: (error) => {
-                manager.log(`❌ Task failed: ${error.message}`);
-            }
-        };
+    const task = {
+        number,
+        fileUrl: file_url,
+        originalFilename: original_filename,
+        description: `Send file to ${number}`,
+        onSuccess: (result) => {
+            // Task completed successfully
+        },
+        onError: (error) => {
+            // Task failed
+        }
+    };
 
         manager.addTask(task);
         

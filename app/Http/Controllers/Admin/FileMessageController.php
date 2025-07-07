@@ -34,6 +34,7 @@ public function upload(Request $request)
         $message = FileMessage::create([
             'mobile_number' => $number,
             'file_path' => $path,
+            'original_filename' => $file->getClientOriginalName(),
             'status' => 'pending'
         ]);
 
@@ -70,8 +71,8 @@ public function whatsappStatus()
     $messages = FileMessage::where('status', 'pending')->get();
 
     foreach ($messages as $message) {
-            $fileUrl = config('app.url') . '/storage/' . $message->file_path;
-            $result = $this->whatsappService->sendFile($message->mobile_number, $fileUrl);
+            $fileUrl = config('app.asset_url') . '/storage/' . $message->file_path;
+            $result = $this->whatsappService->sendFile($message->mobile_number, $fileUrl, $message->original_filename);
 
             if ($result['success']) {
             $message->status = 'sent';

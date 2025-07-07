@@ -13,11 +13,13 @@
 
 <div class="container-fluid">
       <div class="row">
-        <div class="col-xl-7"><img class="bg-img-cover bg-center" src="{{asset('AdminAssets/images/login/2.jpg')}}" alt="looginpage"></div>
+        <div class="col-xl-7">
+          <img class="bg-img-cover bg-center" src="{{asset('AdminAssets/images/login/23.png')}}" alt="looginpage">
+        </div>
         <div class="col-xl-5 p-0">
           <div class="login-card login-dark">
             <div>
-              <div><a class="logo text-start" href=""><img class="img-fluid for-light" src="{{asset('AdminAssets/images/logo/logo.png')}}" alt="looginpage"><img class="img-fluid for-dark" src="{{asset('AdminAssets/images/logo/logo_dark.png')}}" alt="looginpage"></a></div>
+              {{-- <div><a class="logo text-start" href=""><img class="img-fluid for-light" src="{{asset('AdminAssets/images/logo/logo.png')}}" alt="looginpage"><img class="img-fluid for-dark" src="{{asset('AdminAssets/images/logo/logo_dark.png')}}" alt="looginpage"></a></div> --}}
               <div class="login-main"> 
                 <form class="theme-form" action="{{route('login.attempt')}}" method="POST">
                   @csrf
@@ -54,11 +56,11 @@
                     </div>
                     <button class="btn btn-primary btn-block w-100 mt-3" type="submit">Sign in</button>
                   </div>
-                  <h6 class="text-muted mt-4 or">Or Sign in with</h6>
+                  {{-- <h6 class="text-muted mt-4 or">Or Sign in with</h6>
                   <div class="social mt-4">
                     <div class="btn-showcase"><a class="btn btn-light" href="https://www.linkedin.com/login" target="_blank"><i class="fa-brands fa-linkedin-in"></i></a><a class="btn btn-light" href="https://twitter.com/login?lang=en" target="_blank"><i class="fa-brands fa-x-twitter"></i></a><a class="btn btn-light" href="https://www.facebook.com/" target="_blank"><i class="fa-brands fa-facebook-f"></i></a><a class="btn btn-light" href="https://www.google.com/" target="_blank"><i class="fa-brands fa-google"></i></a></div>
-                  </div>
-                  <p class="mt-4 mb-0 text-center">Don't have account?<a class="ms-2" href="{{route('register')}}">Create Account</a></p>
+                  </div> --}}
+                  {{-- <p class="mt-4 mb-0 text-center">Don't have account?<a class="ms-2" href="{{route('register')}}">Create Account</a></p> --}}
                 </form>
               </div>
             </div>
