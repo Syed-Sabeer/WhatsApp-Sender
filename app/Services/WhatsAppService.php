@@ -41,12 +41,13 @@ class WhatsAppService
     /**
      * Send a file to WhatsApp
      */
-    public function sendFile($number, $fileUrl)
+    public function sendFile($number, $fileUrl, $originalFilename = null)
     {
         try {
             $response = Http::timeout($this->timeout)->post($this->nodeServerUrl . '/send', [
                 'number' => $number,
                 'file_url' => $fileUrl,
+                'original_filename' => $originalFilename,
             ]);
 
             if ($response->ok()) {

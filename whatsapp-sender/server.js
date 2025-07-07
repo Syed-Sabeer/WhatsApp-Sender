@@ -119,7 +119,7 @@ class WhatsAppManager {
         }
     }
 
-    async sendFile(number, fileUrl) {
+    async sendFile(number, fileUrl, originalFilename = null) {
         if (!this.isConnected) {
             throw new Error('WhatsApp client is not connected');
         }
@@ -133,10 +133,15 @@ class WhatsAppManager {
             
             const mime = response.headers['content-type'];
             const base64 = Buffer.from(response.data).toString('base64');
-            const media = new MessageMedia(mime, base64, 'file');
+            
+            // Use provided original filename or extract from URL
+            const filename = originalFilename || fileUrl.split('/').pop();
+            
+            // Create media with original filename to preserve format
+            const media = new MessageMedia(mime, base64, filename);
 
             const chatId = `${number}@c.us`;
-            this.log(`📨 Sending file to: ${chatId}`);
+            this.log(`📨 Sending file to: ${chatId} with filename: ${filename}`);
             
             await this.client.sendMessage(chatId, media);
             this.log(`✅ File sent successfully to ${number}`);
@@ -172,7 +177,7 @@ class WhatsAppManager {
             this.log(`🔄 Processing task: ${task.description}`);
             
             try {
-                const result = await this.sendFile(task.number, task.fileUrl);
+                const result = await this.sendFile(task.number, task.fileUrl, task.originalFilename);
                 this.sentFiles++;
                 this.processedFiles.push({
                     number: task.number,
@@ -239,7 +244,7 @@ const whatsappManager = new WhatsAppManager();
 
 // API Routes
 app.post('/send', async (req, res) => {
-    const { number, file_url } = req.body;
+    const { number, file_url, original_filename } = req.body;
 
     if (!number || !file_url) {
         return res.status(400).json({ 
@@ -250,6 +255,7 @@ app.post('/send', async (req, res) => {
     const task = {
         number,
         fileUrl: file_url,
+        originalFilename: original_filename,
         description: `Send file to ${number}`,
         onSuccess: (result) => {
             // Task completed successfully

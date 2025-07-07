@@ -1,0 +1,26 @@
+2025/07/07-21:11:35.751 15cc Reusing MANIFEST C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/07-21:11:35.753 15cc Recovering log #272
+2025/07/07-21:11:37.364 15cc Reusing old log C:\xampp\htdocs\Whatsapp\whatsapp-sender\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000272.log 
+2025/07/07-21:11:38.793 2020 Level-0 table #283: started
+2025/07/07-21:11:38.948 2020 Level-0 table #283: 683912 bytes OK
+2025/07/07-21:11:38.953 2020 Delete type=0 #272
+2025/07/07-21:11:38.955 2020 Manual compaction at level-0 from '\x00H\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00I\x00\x00\x00' @ 0 : 0; will stop at '\x00H\x00\x00\x05' @ 1436307 : 1
+2025/07/07-21:11:38.956 2020 Compacting 1@0 + 4@1 files
+2025/07/07-21:11:39.618 2020 Generated table #284@0: 20784 keys, 2171157 bytes
+2025/07/07-21:11:40.495 2020 Generated table #285@0: 23654 keys, 2210541 bytes
+2025/07/07-21:11:41.491 2020 Generated table #286@0: 96955 keys, 2245469 bytes
+2025/07/07-21:11:41.663 2020 Generated table #287@0: 27302 keys, 586379 bytes
+2025/07/07-21:11:41.663 2020 Compacted 1@0 + 4@1 files => 7213546 bytes
+2025/07/07-21:11:41.664 2020 compacted to: files[ 0 4 2 0 0 0 0 ]
+2025/07/07-21:11:41.666 2020 Delete type=2 #283
+2025/07/07-21:11:41.667 2020 Manual compaction at level-0 from '\x00H\x00\x00\x05' @ 1436307 : 1 .. '\x00I\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/07/07-21:11:48.700 2164 Compacting 1@1 + 2@2 files
+2025/07/07-21:11:48.996 2164 Generated table #288@1: 19433 keys, 2175851 bytes
+2025/07/07-21:11:49.135 2164 Generated table #289@1: 2511 keys, 2148929 bytes
+2025/07/07-21:11:49.169 2164 Generated table #290@1: 4132 keys, 441665 bytes
+2025/07/07-21:11:49.169 2164 Compacted 1@1 + 2@2 files => 4766445 bytes
+2025/07/07-21:11:49.170 2164 compacted to: files[ 0 3 3 0 0 0 0 ]
+2025/07/07-21:11:49.171 2164 Delete type=2 #275
+2025/07/07-21:11:49.171 2164 Delete type=2 #276
+2025/07/07-21:11:49.171 2164 Delete type=2 #277
+2025/07/07-21:11:49.171 2164 Delete type=2 #278
